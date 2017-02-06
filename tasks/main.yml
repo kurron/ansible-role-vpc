@@ -1,0 +1,111 @@
+---
+- name: Create privledged folders
+  become: yes
+  file:
+      path: "{{item}}"
+      state: directory
+      mode: 0755
+      recurse: yes
+  with_items:
+  - "{{jdk_destination}}"
+
+- name: Determine Default JDK
+  become: no
+  set_fact:
+#     default_jdk: "{% if jdk_oracle_jdk_install %}{{jdk_oracle_jdk_link_destination}}{% else %}{{jdk_azul_jdk_link_destination}}{% endif %}"
+      default_jdk: "{{jdk_azul_jdk_link_destination}}"
+
+- name: Download Azul JDK Tarball
+  become: no
+  get_url:
+      url: "http://cdn.azul.com/zulu/bin/zulu{{jdk_azul_jdk_build}}-jdk{{jdk_azul_jdk_version}}-linux_x64.tar.gz"
+      dest: "{{ansible_user_dir}}/{{jdk_download_directory}}/azul-jdk-{{jdk_azul_jdk_version}}.tar.gz"
+      mode: 0444
+  when: jdk_azul_jdk_install
+
+- name: Uncompress Azul JDK Tarball
+  become: yes
+  unarchive:
+      src: "{{ansible_user_dir}}/{{jdk_download_directory}}/azul-jdk-{{jdk_azul_jdk_version}}.tar.gz"
+      dest: "{{jdk_destination}}"
+      copy: no
+      owner: "{{ansible_user_uid}}"
+      group: "{{ansible_user_gid}}"
+      mode: 0555
+      creates: "{{jdk_destination}}//zulu{{jdk_azul_jdk_build}}-jdk{{jdk_azul_jdk_version}}-linux_x64/LICENSE"
+  when: jdk_azul_jdk_install
+
+- name: Test Azul JDK
+  become: no
+  command: "{{jdk_destination}}//zulu{{jdk_azul_jdk_build}}-jdk{{jdk_azul_jdk_version}}-linux_x64/bin/java -version"
+  when: jdk_azul_jdk_install
+
+- name: Create Softlink To Azul JDK
+  become: yes
+  file:
+      src: "{{jdk_destination}}//zulu{{jdk_azul_jdk_build}}-jdk{{jdk_azul_jdk_version}}-linux_x64"
+      dest: "{{jdk_destination}}/{{jdk_azul_jdk_link_destination}}"
+      owner: "{{ansible_user_uid}}"
+      group: "{{ansible_user_gid}}"
+      state: link
+  when: jdk_azul_jdk_install
+
+- name: Download Oracle JDK Tarball
+  become: no
+  get_url:
+      url: "http://download.oracle.com/otn-pub/java/jdk/{{ jdk_oracle_jdk_path }}-linux-x64.tar.gz"
+      dest: "{{ansible_user_dir}}/{{jdk_download_directory}}/oracle-jdk-{{ jdk_oracle_jdk_version }}.tar.gz"
+      headers: 'Cookie:oraclelicense=accept-securebackup-cookie'
+      mode: 0444
+  when: jdk_oracle_jdk_install
+
+- name: Uncompress Oracle JDK Tarball
+  become: yes
+  unarchive:
+      src: "{{ansible_user_dir}}/{{jdk_download_directory}}/oracle-jdk-{{jdk_oracle_jdk_version}}.tar.gz"
+      dest: "{{ jdk_destination }}"
+      copy: no
+      owner: "{{ansible_user_uid}}"
+      group: "{{ansible_user_gid}}"
+      mode: 0555
+      creates: "{{ jdk_destination }}/{{jdk_oracle_jdk_version}}/COPYRIGHT"
+  when: jdk_oracle_jdk_install
+
+- name: Test Oracle JDK
+  become: no
+  command: "{{jdk_destination}}/{{jdk_oracle_jdk_version}}/bin/java -version"
+  when: jdk_oracle_jdk_install
+
+- name: Create Softlink To Oracle JDK
+  become: yes
+  file:
+      src: "{{jdk_destination}}/{{jdk_oracle_jdk_version}}"
+      dest: "{{jdk_destination}}/{{jdk_oracle_jdk_link_destination}}"
+      owner: "{{ansible_user_uid}}"
+      group: "{{ansible_user_gid}}"
+      state: link
+  when: jdk_oracle_jdk_install
+
+- name: Create Softlink To Neutral JDK
+  become: yes
+  file:
+      src: "{{jdk_destination}}/{{default_jdk}}"
+      dest: "{{jdk_global_jdk_directory}}"
+      owner: "{{ansible_user_uid}}"
+      group: "{{ansible_user_gid}}"
+      state: link
+
+- name: Set Interactive Environments To Use Default JDK
+  become: yes
+  template:
+      src: "templates/default-jdk-environment.sh.j2"
+      dest: "/etc/profile.d/default-jdk-environment.sh"
+      owner: "{{ansible_user_uid}}"
+      group: "{{ansible_user_gid}}"
+      mode: 0555
+
+- name: Set Non-Interactive Environments To Use Default JDK
+  become: yes
+  lineinfile:
+      dest: /etc/environment
+      line: 'JAVA_HOME={{ jdk_global_jdk_directory }}'

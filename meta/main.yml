@@ -1,0 +1,43 @@
+galaxy_info:
+  author: Ronald D. Kurr
+  description: Oracle and Azul JDKs.
+  company: jvmguy.com
+
+  license: Apache 2
+
+  min_ansible_version: 2.1
+
+  github_branch: master
+
+  platforms:
+  - name: Fedora
+    versions:
+    - 24
+  - name: Ubuntu
+    versions:
+  #  - all
+  #  - lucid
+  #  - maverick
+  #  - natty
+  #  - oneiric
+  #  - precise
+  #  - quantal
+  #  - raring
+  #  - saucy
+  #  - trusty
+  #  - utopic
+  #  - vivid
+  #  - wily
+    - xenial
+
+  galaxy_tags:
+      - jdk
+      - jvm
+      - java
+      - zulu
+      - oracle
+      - azul
+
+dependencies:
+    - { role: kurron.base }
+
