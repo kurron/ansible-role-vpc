@@ -8,3 +8,9 @@ vpc_purpose: "Testing Cloud"
 vpc_creator: "Ansible"
 vpc_environment: "Test"
 vpc_freetext: "I have no notes yet"
+
+# default to a /24 block
+vpc_public_subnet_a_cidr_block: "10.0.10.0"
+vpc_private_subnet_a_cidr_block: "10.0.20.0"
+vpc_public_subnet_b_cidr_block: "10.0.30.0"
+vpc_private_subnet_b_cidr_block: "10.0.40.0"

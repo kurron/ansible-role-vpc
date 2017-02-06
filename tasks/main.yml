@@ -74,3 +74,28 @@
           Environment: "{{ vpc_environment }}"
           Freetext: "VPC's default network ACL"
   when: false
+
+- name: Create Subnets
+  ec2_vpc_subnet:
+      az: "{{ item.az }}"
+      cidr: "{{ item.cidr }}"
+      region: "{{ vpc_region }}"
+      state: "present"
+      vpc_id: "{{ vpc_id }}"
+      tags:
+          Name: "{{ item.cidr }} - {{ item.az }}"
+          Project: "{{ vpc_project }}"
+          Purpose: "{{ item.purpose }}"
+          Creator: "{{ vpc_creator }}"
+          Environment: "{{ vpc_environment }}"
+          Freetext: "{{ item.notes }}"
+  items:
+      - { az: "{{ vpc_region }}a", cidr: "{{ vpc_public_subnet_a_cidr_block }}/24", purpose: "Public subnet", notes: "None" }
+      - { az: "{{ vpc_region }}a", cidr: "{{ vpc_private_subnet_a_cidr_block }}/24", purpose: "Private subnet", notes: "None" }
+      - { az: "{{ vpc_region }}b", cidr: "{{ vpc_public_subnet_b_cidr_block }}/24", purpose: "Public subnet", notes: "None" }
+      - { az: "{{ vpc_region }}b", cidr: "{{ vpc_private_subnet_a_cidr_block }}/24", purpose: "Private subnet", notes: "None" }
+
+
+# security group facts are brand new so we can't search and tag yet
+- debug:
+    msg: "Result is {{ security_group_result }}"
