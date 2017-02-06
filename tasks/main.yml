@@ -72,6 +72,7 @@
           Freetext: "VPC's default network ACL"
   when: false
 
+# TODO: need to figure out how to enable auto-assign of public ips to anyting in the pubilc subnets
 - name: Create Subnets
   ec2_vpc_subnet:
       az: "{{ item.az }}"
@@ -86,21 +87,12 @@
           Creator: "{{ vpc_creator }}"
           Environment: "{{ vpc_environment }}"
           Freetext: "{{ item.notes }}"
-  register: "{{ item.variable_name }}"
   items:
-      - { variable_name: "a_public", az: "{{ vpc_region }}a", cidr: "{{ vpc_public_subnet_a_cidr_block }}/24", purpose: "Public subnet", notes: "None" }
-      - { variable_name: "a_private", az: "{{ vpc_region }}a", cidr: "{{ vpc_private_subnet_a_cidr_block }}/24", purpose: "Private subnet", notes: "None" }
-      - { variable_name: "b_public", az: "{{ vpc_region }}b", cidr: "{{ vpc_public_subnet_b_cidr_block }}/24", purpose: "Public subnet", notes: "None" }
-      - { variable_name: "b_private", az: "{{ vpc_region }}b", cidr: "{{ vpc_private_subnet_a_cidr_block }}/24", purpose: "Private subnet", notes: "None" }
+      - { az: "{{ vpc_region }}a", cidr: "{{ vpc_public_subnet_a_cidr_block }}/24", purpose: "Public subnet", notes: "None" }
+      - { az: "{{ vpc_region }}a", cidr: "{{ vpc_private_subnet_a_cidr_block }}/24", purpose: "Private subnet", notes: "None" }
+      - { az: "{{ vpc_region }}b", cidr: "{{ vpc_public_subnet_b_cidr_block }}/24", purpose: "Public subnet", notes: "None" }
+      - { az: "{{ vpc_region }}b", cidr: "{{ vpc_private_subnet_a_cidr_block }}/24", purpose: "Private subnet", notes: "None" }
 
-
-- debug:
-    msg: "Result is bob"
-  items:
-      - { variable_name: "a_public" }
-      - { variable_name: "a_private" }
-      - { variable_name: "b_public" }
-      - { variable_name: "b_private" }
 
 # does not support tagging, so we can't create a billing report
 - name: Create Internet Gateway
@@ -109,3 +101,29 @@
       state: "present"
       vpc_id: "{{ vpc_id }}"
   register: iternet_gateway_result
+
+- debug:
+    msg: "Result is {{ iternet_gateway_result }}"
+
+- name: Store Internet Gateway ID
+  set_fact:
+    iternet_gateway_id: "{{ iternet_gateway_result.gateway_id }}"
+
+- name: Create Public Route Table
+  ec2_vpc_route_table:
+      region: "{{ vpc_region }}"
+      state: "present"
+      vpc_id: "{{ vpc_id }}"
+      routes:
+          - dest: "0.0.0.0/0"
+            gateway_id: "{{ iternet_gateway_id }}"
+      subnets:
+          - "{{ vpc_public_subnet_a_cidr_block }}/24"
+          - "{{ vpc_public_subnet_b_cidr_block }}/24"
+      tags:
+          Name: "{{ vpc_name }} Public"
+          Project: "{{ vpc_project }}"
+          Purpose: "All traffic goes to the internet gateway"
+          Creator: "{{ vpc_creator }}"
+          Environment: "{{ vpc_environment }}"
+          Freetext: "None"
