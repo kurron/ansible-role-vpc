@@ -29,6 +29,10 @@
           vpc-id: "{{ vpc_result.vpc.id }}"
   register: route_table_result
 
+- debug:
+    msg: "Result is {{ route_table_result }}"
+
+
 - name: Store Default Route Table ID
   set_fact:
     default_route_table_id: "{{ route_table_result.route_tables[0].id }}"
@@ -91,19 +95,16 @@
       - { az: "{{ vpc_region }}a", cidr: "{{ vpc_public_subnet_a_cidr_block }}/24", purpose: "Public subnet", notes: "None" }
       - { az: "{{ vpc_region }}a", cidr: "{{ vpc_private_subnet_a_cidr_block }}/24", purpose: "Private subnet", notes: "None" }
       - { az: "{{ vpc_region }}b", cidr: "{{ vpc_public_subnet_b_cidr_block }}/24", purpose: "Public subnet", notes: "None" }
-      - { az: "{{ vpc_region }}b", cidr: "{{ vpc_private_subnet_a_cidr_block }}/24", purpose: "Private subnet", notes: "None" }
+      - { az: "{{ vpc_region }}b", cidr: "{{ vpc_private_subnet_b_cidr_block }}/24", purpose: "Private subnet", notes: "None" }
 
 
-# does not support tagging, so we can't create a billing report
+# TODO: does not support tagging, so we can't create a billing report
 - name: Create Internet Gateway
   ec2_vpc_igw:
       region: "{{ vpc_region }}"
       state: "present"
       vpc_id: "{{ vpc_id }}"
   register: iternet_gateway_result
-
-- debug:
-    msg: "Result is {{ iternet_gateway_result }}"
 
 - name: Store Internet Gateway ID
   set_fact:
@@ -127,3 +128,38 @@
           Creator: "{{ vpc_creator }}"
           Environment: "{{ vpc_environment }}"
           Freetext: "None"
+
+- name: Gather Public Subnet IDs
+  ec2_vpc_subnet_facts:
+      region: "{{ vpc_region }}"
+      filters:
+          vpc-id: "{{ vpc_result.vpc.id }}"
+          tag-value: "Public subnet"
+  register: public_subnet_result
+
+- name: Store Random Public Subnet ID
+  set_fact:
+    nat_gateway_subnet: "{{ public_subnet_result.subnets[0].id }}"
+
+# TODO: does not currently allow for tagging
+- name: Create NAT Gateway
+  ec2_vpc_nat_gateway:
+      if_exist_do_not_create: true
+      region: "{{ vpc_region }}"
+      state: "present"
+      subnet_id: "{{ nat_gateway_subnet }}"
+      wait: yes
+  register: nat_gateway_result
+
+- name: Store NAT Gateway ID
+  set_fact:
+    nat_gateway_id: "{{ nat_gateway_result.nat_gateway_id }}"
+
+- name: Have Default Route Table Use The NAT Gateway
+  ec2_vpc_route_table:
+      region: "{{ vpc_region }}"
+      vpc_id: "{{ vpc_id }}"
+      route_table_id: "{{ default_route_table_id }}"
+      routes:
+          - dest: "0.0.0.0/0"
+            gateway_id: "{{ nat_gateway_id }}"
