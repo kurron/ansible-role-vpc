@@ -1,17 +1,11 @@
 ---
-jdk_download_directory: Downloads
-jdk_software_directory: Software
-jdk_destination: /usr/lib/jvm
-jdk_neutral_jdk_link_destination: jdk-8
-jdk_global_jdk_directory: "{{jdk_destination}}/{{jdk_neutral_jdk_link_destination}}"
-
-jdk_oracle_jdk_install: true
-jdk_oracle_jdk_version: jdk1.8.0_121
-jdk_oracle_jdk_path: 8u121-b13/e9e7ea248e2c4826b92b3f075a80e441/jdk-8u121
-jdk_oracle_jdk_link_destination: oracle-jdk-8
-
-jdk_azul_jdk_install: true
-jdk_azul_jdk_build: 8.19.0.1
-jdk_azul_jdk_version: 8.0.112
-jdk_azul_jdk_link_destination: azul-jdk-8
-
+vpc_create: true
+vpc_cidr_block: "10.0.0.0/16"
+vpc_name: "CHANGE ME"
+vpc_region: "us-west-2"
+vpc_state: "present"
+vpc_project: "Ansible Testing"
+vpc_purpose: "Testing Cloud"
+vpc_creator: "Ansible"
+vpc_environment: "Test"
+vpc_freetext: "I have no notes yet"

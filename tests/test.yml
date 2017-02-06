@@ -1,4 +1,7 @@
 ---
-- hosts: remote
+- hosts: localhost
+  become: no
+  connection: local
+  gather_facts: no
   roles:
-  - role: ../../ansible-role-jdk
+  - role: ../../ansible-role-vpc

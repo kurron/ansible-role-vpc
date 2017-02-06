@@ -1,6 +1,6 @@
 galaxy_info:
   author: Ronald D. Kurr
-  description: Oracle and Azul JDKs.
+  description: Amazon VPC with public and private subnets.
   company: jvmguy.com
 
   license: Apache 2
@@ -12,7 +12,7 @@ galaxy_info:
   platforms:
   - name: Fedora
     versions:
-    - 24
+    - 25
   - name: Ubuntu
     versions:
   #  - all
@@ -31,13 +31,5 @@ galaxy_info:
     - xenial
 
   galaxy_tags:
-      - jdk
-      - jvm
-      - java
-      - zulu
-      - oracle
-      - azul
-
-dependencies:
-    - { role: kurron.base }
-
+      - aws
+      - vpc
