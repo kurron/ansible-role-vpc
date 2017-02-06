@@ -33,10 +33,7 @@
   set_fact:
     default_route_table_id: "{{ route_table_result.route_tables[0].id }}"
 
-- debug:
-    msg: "Result is {{ default_route_table_id }}"
-
-- name: Tag Default Route Table ID
+- name: Tag Default Route Table
   ec2_vpc_route_table:
       region: "{{ vpc_region }}"
       vpc_id: "{{ vpc_id }}"
@@ -48,3 +45,32 @@
           Creator: "{{ vpc_creator }}"
           Environment: "{{ vpc_environment }}"
           Freetext: "VPC's default route table"
+
+- name: Gather NACL Facts
+  ec2_vpc_nacl_facts:
+      region: "{{ vpc_region }}"
+      filters:
+          vpc-id: "{{ vpc_result.vpc.id }}"
+          default: "true"
+  register: nacl_result
+
+- name: Store Default NACL ID
+  set_fact:
+    default_nacl_id: "{{ nacl_result.nacls[0].nacl_id }}"
+
+- debug:
+    msg: "Result is {{ default_nacl_id }}"
+
+# Unfortunately, this only allows for creation and deletion, not updating.
+- name: Tag Default NACL
+  ec2_vpc_nacl:
+      region: "{{ vpc_region }}"
+      vpc_id: "{{ vpc_id }}"
+      tags:
+          Name: "{{ vpc_name }}"
+          Project: "{{ vpc_project }}"
+          Purpose: "{{ vpc_purpose }}"
+          Creator: "{{ vpc_creator }}"
+          Environment: "{{ vpc_environment }}"
+          Freetext: "VPC's default network ACL"
+  when: false
