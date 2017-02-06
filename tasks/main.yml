@@ -94,6 +94,18 @@
       - { variable_name: "b_private", az: "{{ vpc_region }}b", cidr: "{{ vpc_private_subnet_a_cidr_block }}/24", purpose: "Private subnet", notes: "None" }
 
 
-# security group facts are brand new so we can't search and tag yet
 - debug:
-    msg: "Result is {{ security_group_result }}"
+    msg: "Result is bob"
+  items:
+      - { variable_name: "a_public" }
+      - { variable_name: "a_private" }
+      - { variable_name: "b_public" }
+      - { variable_name: "b_private" }
+
+# does not support tagging, so we can't create a billing report
+- name: Create Internet Gateway
+  ec2_vpc_igw:
+      region: "{{ vpc_region }}"
+      state: "present"
+      vpc_id: "{{ vpc_id }}"
+  register: iternet_gateway_result
