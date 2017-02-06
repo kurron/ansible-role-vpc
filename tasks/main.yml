@@ -58,9 +58,6 @@
   set_fact:
     default_nacl_id: "{{ nacl_result.nacls[0].nacl_id }}"
 
-- debug:
-    msg: "Result is {{ default_nacl_id }}"
-
 # Unfortunately, this only allows for creation and deletion, not updating.
 - name: Tag Default NACL
   ec2_vpc_nacl:
@@ -89,11 +86,12 @@
           Creator: "{{ vpc_creator }}"
           Environment: "{{ vpc_environment }}"
           Freetext: "{{ item.notes }}"
+  register: "{{ item.variable_name }}"
   items:
-      - { az: "{{ vpc_region }}a", cidr: "{{ vpc_public_subnet_a_cidr_block }}/24", purpose: "Public subnet", notes: "None" }
-      - { az: "{{ vpc_region }}a", cidr: "{{ vpc_private_subnet_a_cidr_block }}/24", purpose: "Private subnet", notes: "None" }
-      - { az: "{{ vpc_region }}b", cidr: "{{ vpc_public_subnet_b_cidr_block }}/24", purpose: "Public subnet", notes: "None" }
-      - { az: "{{ vpc_region }}b", cidr: "{{ vpc_private_subnet_a_cidr_block }}/24", purpose: "Private subnet", notes: "None" }
+      - { variable_name: "a_public", az: "{{ vpc_region }}a", cidr: "{{ vpc_public_subnet_a_cidr_block }}/24", purpose: "Public subnet", notes: "None" }
+      - { variable_name: "a_private", az: "{{ vpc_region }}a", cidr: "{{ vpc_private_subnet_a_cidr_block }}/24", purpose: "Private subnet", notes: "None" }
+      - { variable_name: "b_public", az: "{{ vpc_region }}b", cidr: "{{ vpc_public_subnet_b_cidr_block }}/24", purpose: "Public subnet", notes: "None" }
+      - { variable_name: "b_private", az: "{{ vpc_region }}b", cidr: "{{ vpc_private_subnet_a_cidr_block }}/24", purpose: "Private subnet", notes: "None" }
 
 
 # security group facts are brand new so we can't search and tag yet
