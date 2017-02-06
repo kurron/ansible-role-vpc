@@ -16,12 +16,35 @@
           Creator: "{{ vpc_creator }}"
           Environment: "{{ vpc_environment }}"
           Freetext: "{{ vpc_freetext }}"
-  when: vpc_create
   register: vpc_result
 
 - name: Store VPC ID
   set_fact:
     vpc_id: "{{ vpc_result.vpc.id }}"
 
+- name: Gather Route Table Facts
+  ec2_vpc_route_table_facts:
+      region: "{{ vpc_region }}"
+      filters:
+          vpc-id: "{{ vpc_result.vpc.id }}"
+  register: route_table_result
+
+- name: Store Default Route Table ID
+  set_fact:
+    default_route_table_id: "{{ route_table_result.route_tables[0].id }}"
+
 - debug:
-    msg: "Result is {{ vpc_id }}"
+    msg: "Result is {{ default_route_table_id }}"
+
+- name: Tag Default Route Table ID
+  ec2_vpc_route_table:
+      region: "{{ vpc_region }}"
+      vpc_id: "{{ vpc_id }}"
+      route_table_id: "{{ default_route_table_id }}"
+      tags:
+          Name: "{{ vpc_name }}"
+          Project: "{{ vpc_project }}"
+          Purpose: "{{ vpc_purpose }}"
+          Creator: "{{ vpc_creator }}"
+          Environment: "{{ vpc_environment }}"
+          Freetext: "VPC's default route table"
