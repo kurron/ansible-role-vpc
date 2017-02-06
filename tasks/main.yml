@@ -17,3 +17,11 @@
           Environment: "{{ vpc_environment }}"
           Freetext: "{{ vpc_freetext }}"
   when: vpc_create
+  register: vpc_result
+
+- name: Store VPC ID
+  set_fact:
+    vpc_id: "{{ vpc_result.vpc.id }}"
+
+- debug:
+    msg: "Result is {{ vpc_id }}"
